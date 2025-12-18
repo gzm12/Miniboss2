@@ -5,11 +5,13 @@ public class PlayerController : MonoBehaviour
 {
     [SerializeField] private float moveSpeed = 5f;
     [SerializeField] private float mouseSensitivity = 2f;
+    [SerializeField] private Canvas menuCanvas;
     private Rigidbody rb;
     private Vector3 moveDirection;
     private Transform cameraTransform;
     private float xRotation = 0f;
     private Animation legacyAnimation;
+    private bool menuOpen = false;
 
     // Start is called once before the first execution of Update after the MonoBehaviour is created
     void Start()
@@ -17,20 +19,63 @@ public class PlayerController : MonoBehaviour
         rb = GetComponent<Rigidbody>();
         legacyAnimation = GetComponent<Animation>();
         cameraTransform = GetComponentInChildren<Camera>()?.transform;
-        Cursor.lockState = CursorLockMode.Locked;
+        // Cursor'u baþlangýçta kilitlenmek üzere ayarla
+        UnlockCursor();
     }
 
     // Update is called once per frame
     void Update()
     {
-        HandleInput();
-        HandleMouseLook();
-        UpdateAnimation();
+        // ESC tuþu basýldýðýnda cursor kilit durumunu deðiþtir
+        if (Keyboard.current != null && Keyboard.current.escapeKey.wasPressedThisFrame)
+        {
+            ToggleMenu();
+        }
+
+        if (!menuOpen)
+        {
+            HandleInput();
+            HandleMouseLook();
+            UpdateAnimation();
+        }
     }
 
     void FixedUpdate()
     {
-        ApplyMovement();
+        if (!menuOpen)
+        {
+            ApplyMovement();
+        }
+    }
+
+    private void ToggleMenu()
+    {
+        menuOpen = !menuOpen;
+
+        if (menuOpen)
+        {
+            UnlockCursor();
+            if (menuCanvas != null)
+                menuCanvas.gameObject.SetActive(true);
+        }
+        else
+        {
+            LockCursor();
+            if (menuCanvas != null)
+                menuCanvas.gameObject.SetActive(false);
+        }
+    }
+
+    private void LockCursor()
+    {
+        Cursor.lockState = CursorLockMode.Locked;
+        Cursor.visible = false;
+    }
+
+    private void UnlockCursor()
+    {
+        Cursor.lockState = CursorLockMode.Confined;
+        Cursor.visible = true;
     }
 
     private void HandleInput()
